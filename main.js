@@ -249,4 +249,4 @@ export async function ambilAbsensiByNis(nis) {
     console.error("Error getting attendance by NIS: ", error);
     throw error;
   }
-}w
+}
