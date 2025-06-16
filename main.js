@@ -23,166 +23,57 @@ const firebaseConfig = {
   measurementId: "G-1RSX6TCWZ2"
 };
 
-//inisialisasi firebase
-const aplikasi = initializeApp(firebaseConfig)
-const db = getFirestore(aplikasi)
-
-// Collection reference
-const absensiCollection = collection(db, "absensi");
-
-// Function to get all attendance records
 export async function ambilDaftarAbsensi() {
+  const refDokumen = collection(basisdata, "inventory");
+  const kueri = query(refDokumen, orderBy("item"));
+  const cuplikanKueri = await getDocs(kueri);
+  
+  let hasilKueri = [];
+  cuplikanKueri.forEach((dokumen) => {
+    hasilKueri.push({
+      id: dokumen.id,
+      item: dokumen.data().item,
+      jumlah: dokumen.data().jumlah, 
+      harga: dokumen.data().harga 
+    })
+  })
+  
+  return hasilKueri;
+}
+
+const app = initializeApp(firebaseConfig);
+const basisdata = getFirestore(app);
+
+export async function tambahInventory(item, jumlah, harga) {
   try {
-    const q = query(absensiCollection, orderBy("tanggal", "desc"), orderBy("nama"));
-    const querySnapshot = await getDocs(q);
+    // menyimpan data ke firebase
+    const refDokumen =await addDoc(collection(basisdata,"inventory"), {
+      item: item,
+      jumlah: jumlah,
+      harga: harga
+    })
     
-    const attendanceList = [];
-    querySnapshot.forEach((doc) => {
-      attendanceList.push({
-        id: doc.id,
-        tanggal: doc.data().tanggal,
-        nis: doc.data().nis,
-        nama: doc.data().nama,
-        alamat: doc.data().alamat,
-        notlpn: doc.data().notlpn,
-        kelas: doc.data().kelas,
-        keterangan: doc.data().keterangan
-      });
-    });
-    
-    return attendanceList;
+    //menampilkan pesan hasil 
+    console.log("berhasil menyimpan data inventory")
   } catch (error) {
-    console.error("Error getting attendance data: ", error);
-    return [];
+    //menampilkan pesan gagal
+    console.log("gagal menyimpan data inventory")
   }
 }
 
-// Function to get single attendance record by ID
-export async function ambilAbsensiById(id) {
-  try {
-    const docRef = doc(db, "absensi", id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        id: docSnap.id,
-        ...docSnap.data()
-      };
-    } else {
-      console.log("No such document!");
-      return null;
-    }
-  } catch (error) {
-    console.error("Error getting attendance record: ", error);
-    return null;
-  }
-}
-
-// Function to add new attendance record
-export async function tambahAbsensi(data) {
-  try {
-    const docRef = await addDoc(absensiCollection, {
-      tanggal: data.tanggal,
-      nis: data.nis,
-      nama: data.nama,
-      alamat: data.alamat,
-      notlpn: data.notlpn,
-      kelas: data.kelas,
-      keterangan: data.keterangan,
-      createdAt: new Date().toISOString()
-    });
-    
-    console.log("Attendance record added with ID: ", docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.error("Error adding attendance record: ", error);
-    throw error;
-  }
-}
-
-// Function to update attendance record
-export async function ubahAbsensi(data) {
-  try {
-    const docRef = doc(db, "absensi", data.id);
-    await updateDoc(docRef, {
-      tanggal: data.tanggal,
-      nis: data.nis,
-      nama: data.nama,
-      alamat: data.alamat,
-      notlpn: data.notlpn,
-      kelas: data.kelas,
-      keterangan: data.keterangan,
-      updatedAt: new Date().toISOString()
-    });
-    
-    console.log("Attendance record updated successfully");
-    return true;
-  } catch (error) {
-    console.error("Error updating attendance record: ", error);
-    throw error;
-  }
-}
-
-// Function to delete attendance record
 export async function hapusAbsensi(id) {
-  try {
-    await deleteDoc(doc(db, "absensi", id));
-    console.log("Attendance record deleted successfully");
-    return true;
-  } catch (error) {
-    console.error("Error deleting attendance record: ", error);
-    throw error;
-  }
+  await deleteDoc(doc(basisdata, "Absensi", id))
 }
 
-// Additional functions for reporting/statistics
-export async function getAttendanceByDateRange(startDate, endDate) {
-  try {
-    const q = query(
-      absensiCollection,
-      where("tanggal", ">=", startDate),
-      where("tanggal", "<=", endDate),
-      orderBy("tanggal")
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const attendanceList = [];
-    
-    querySnapshot.forEach((doc) => {
-      attendanceList.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    return attendanceList;
-  } catch (error) {
-    console.error("Error getting attendance by date range: ", error);
-    return [];
-  }
+export async function ubahAbsensi(id, itembaru, jumlahbaru, hargabaru) {
+  await updateDoc(
+    doc(basisdata, "Absensi", id),
+    {tanggal: tanggalbaru, nis: nisbaru, nama: namabaru, alamat: alamatbaru, notlpon: notlponbaru, kelas: kelasbaru, keterangan: keteranganbaru}
+    )
 }
-
-export async function getAttendanceByStatus(status) {
-  try {
-    const q = query(
-      absensiCollection,
-      where("keterangan", "==", status),
-      orderBy("tanggal", "desc")
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const attendanceList = [];
-    
-    querySnapshot.forEach((doc) => {
-      attendanceList.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    return attendanceList;
-  } catch (error) {
-    console.error("Error getting attendance by status: ", error);
-    return [];
-  }
+export async function ambilAbsensi(id) {
+  const refDokumen = await doc(basisdata, "Absensi", id)
+  const snapshotDokumen = await getDoc(refDokumen)
+  
+  return await snapshotDokumen.data()
 }
