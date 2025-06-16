@@ -24,17 +24,22 @@ const firebaseConfig = {
 };
 
 export async function ambilDaftarAbsensi() {
-  const refDokumen = collection(basisdata, "inventory");
-  const kueri = query(refDokumen, orderBy("item"));
+  const refDokumen = collection(basisdata, "absensi");
+  const kueri = query(refDokumen, orderBy("absensi"));
   const cuplikanKueri = await getDocs(kueri);
   
   let hasilKueri = [];
   cuplikanKueri.forEach((dokumen) => {
     hasilKueri.push({
       id: dokumen.id,
-      item: dokumen.data().item,
-      jumlah: dokumen.data().jumlah, 
-      harga: dokumen.data().harga 
+      tanggal: dokumen.data().tanggal,
+      nis: dokumen.data().nis, 
+      nama: dokumen.data().nama,
+      alamat: dokumen.data().alamat,
+      notlpon: dokumen.data().notlpon,
+      kelas: dokumen.data().kelas,
+      keterangan: dokumen.data().keterangan
+      
     })
   })
   
@@ -44,13 +49,17 @@ export async function ambilDaftarAbsensi() {
 const app = initializeApp(firebaseConfig);
 const basisdata = getFirestore(app);
 
-export async function tambahInventory(item, jumlah, harga) {
+export async function tambahAbsensi(tanggal, nis, nama, alamat, notlpon, kelas, keterangan) {
   try {
     // menyimpan data ke firebase
-    const refDokumen =await addDoc(collection(basisdata,"inventory"), {
-      item: item,
-      jumlah: jumlah,
-      harga: harga
+    const refDokumen =await addDoc(collection(basisdata,"absensi"), {
+      tanggal: tamggal,
+      nis: nis,
+      nama: nama,
+      alamat: alamat,
+      notlpon: notlpon,
+      kelas: kelas,
+      keterangan: keterangan 
     })
     
     //menampilkan pesan hasil 
